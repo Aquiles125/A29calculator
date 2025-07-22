@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Playtime A-29 Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #1d1f21;
+      color: #c9d1d9;
+      font-size: 16px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .form-grid label {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .form-grid input,
+    .form-grid select {
+      padding: 10px;
+      font-size: 16px;
+      height: 45px;
+      width: 100%;
+      box-sizing: border-box;
+      background-color: #282c34;
+      color: #c9d1d9;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #007acc;
+      border: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #c9d1d9;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      background-color: #282c34;
+      color: #c9d1d9;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <h1>A-29 Playtime Calculator</h1> 
+
+  <div class="form-grid">
+    <div>
+      <label for="punto">POINT NAME</label>
+      <input type="text" id="punto" value="TGT">
+    </div>
+
+    <div>
+      <label for="distancia">DISTANCE (NM)</label>
+      <input type="number" id="distancia" value="120">
+    </div>
+
+    <div>
+      <label for="consumoHora">FUEL FLOW (KG/h)</label>
+      <input type="number" id="consumoHora" value="250">
+    </div>
+
+    <div>
+      <label for="consumoNM">CONSUMPTION (KG/NM)</label>
+      <input type="number" id="consumoNM" value="1.3">
+    </div>
+
+    <div>
+      <label for="velocidad">SPEED (NM/min)</label>
+      <input type="number" id="velocidad" value="3.2">
+    </div>
+
+    <div>
+      <label for="configuracion">FUEL CONFIG</label>
+      <select id="configuracion" onchange="setDetot()">
+        <option value="full">FULL (995 kg)</option>
+        <option value="5050">50/50 (810 kg)</option>
+        <option value="6060">60/60 (870 kg)</option>
+        <option value="7070">70/70 (930 kg)</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="detot">DETOT (KG)</label>
+      <input type="number" id="detot" value="995">
+    </div>
+
+    <div>
+      <label for="alterno1">ALTERNATE 1</label>
+      <input type="text" id="alterno1" value="SKAR">
+    </div>
+
+    <div>
+      <label for="mlf1">MLF 1 (KG)</label>
+      <input type="number" id="mlf1" value="290">
+    </div>
+
+    <div>
+      <label for="alterno2">ALTERNATE 2</label>
+      <input type="text" id="alterno2" value="SKCL">
+    </div>
+
+    <div>
+      <label for="mlf2">MLF 2 (KG)</label>
+      <input type="number" id="mlf2" value="200">
+    </div>
+  </div>
+
+  <button onclick="calcular()">CALCULATE</button>
+
+  <label for="resultados">MESSAGE</label>
+  <textarea id="resultados" readonly></textarea>
+
+  <script>
+    function setDetot() {
+      const config = document.getElementById("configuracion").value;
+      let detotField = document.getElementById("detot");
+      if (config === "full") {
+        detotField.value = 995;
+      } else if (config === "5050") {
+        detotField.value = 810;
+      } else if (config === "6060") {
+        detotField.value = 870;
+      } else if (config === "7070") {
+        detotField.value = 930;
+      }
+    }
+
+    function minutosAHHMM(mins) {
+      let absMins = Math.abs(mins);
+      let h = Math.floor(absMins / 60);
+      let m = Math.floor(absMins % 60);
+      return (mins < 0 ? "-" : "") + 
+             (h < 10 ? "0" : "") + h + ":" +
+             (m < 10 ? "0" : "") + m;
+    }
+
+    function calcular() {
+      let punto = document.getElementById("punto").value;
+      let distancia = parseFloat(document.getElementById("distancia").value);
+      let consumoHora = parseFloat(document.getElementById("consumoHora").value);
+      let consumoNM = parseFloat(document.getElementById("consumoNM").value);
+      let velocidad = parseFloat(document.getElementById("velocidad").value);
+      let detot = parseFloat(document.getElementById("detot").value);
+      let alterno1 = document.getElementById("alterno1").value;
+      let mlf1 = parseFloat(document.getElementById("mlf1").value);
+      let alterno2 = document.getElementById("alterno2").value;
+      let mlf2 = parseFloat(document.getElementById("mlf2").value);
+
+      let tiempoPunto = distancia / velocidad;
+      let tiempoPuntoHHMM = minutosAHHMM(tiempoPunto);
+
+      let combustibleNecesario1 = ((distancia * consumoNM) * 2) + mlf1;
+      let combustiblePlaytime1 = detot - combustibleNecesario1;
+      let playtime1Min = (combustiblePlaytime1 / consumoHora) * 60;
+      let textoPlaytime1 = playtime1Min > 0
+        ? minutosAHHMM(playtime1Min)
+        : `SIN PLAYTIME (FALTAN ${Math.abs(combustiblePlaytime1).toFixed(0)} kg)`;
+
+      let combustibleNecesario2 = ((distancia * consumoNM) * 2) + mlf2;
+      let combustiblePlaytime2 = detot - combustibleNecesario2;
+      let playtime2Min = (combustiblePlaytime2 / consumoHora) * 60;
+      let textoPlaytime2 = playtime2Min > 0
+        ? minutosAHHMM(playtime2Min)
+        : `SIN PLAYTIME (FALTAN ${Math.abs(combustiblePlaytime2).toFixed(0)} kg)`;
+
+      let bingo1 = Math.ceil(((distancia * consumoNM) + mlf1) / 10) * 10;
+      let joker1 = bingo1 + 60;
+
+      let bingo2 = Math.ceil(((distancia * consumoNM) + mlf2) / 10) * 10;
+      let joker2 = bingo2 + 60;
+
+      let configValue = document.getElementById("configuracion").value;
+      let configTexto = "";
+      if (configValue === "full") configTexto = "FULL TANK";
+      else if (configValue === "5050") configTexto = "50/50";
+      else if (configValue === "6060") configTexto = "60/60";
+      else if (configValue === "7070") configTexto = "70/70";
+
+      let texto = `Mi Coronel solicito informar
+
+"${punto}" ${distancia}NM
+Tiempo al punto ${tiempoPuntoHHMM}
+
+Playtime ${configTexto}
+Alt ${alterno1} ${textoPlaytime1}
+Alt ${alterno2} ${textoPlaytime2}
+
+JOKER ${alterno1}: ${joker1} kg
+BINGO ${alterno1}: ${bingo1} kg
+
+JOKER ${alterno2}: ${joker2} kg
+BINGO ${alterno2}: ${bingo2} kg
+`;
+
+      document.getElementById("resultados").value = texto;
+    }
+  </script>
+</body>
+</html>
